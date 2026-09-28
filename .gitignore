@@ -1,0 +1,9 @@
+node_modules
+dist
+.DS_Store
+.idea
+.vercel
+*.local
+# Raw Meshy mesh — no longer used (the case is procedural), kept locally as an archive.
+assets/3d/
+*.tsbuildinfo

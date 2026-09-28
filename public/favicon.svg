@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Nord 01 in miniature: charcoal dial, steel bezel, brass hands at 10:08. -->
+  <circle cx="32" cy="32" r="30" fill="#1c1b19"/>
+  <circle cx="32" cy="32" r="28.5" fill="none" stroke="#c9c9c5" stroke-width="3"/>
+  <g stroke="#b08d57" stroke-linecap="round">
+    <line x1="32" y1="32" x2="18.5" y2="23" stroke-width="4"/>
+    <line x1="32" y1="32" x2="49" y2="21" stroke-width="3"/>
+  </g>
+  <circle cx="32" cy="32" r="2.5" fill="#b08d57"/>
+</svg>

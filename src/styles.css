@@ -1,0 +1,819 @@
+:root {
+  --bone: #ede8df;
+  --bone-2: #f4f0e9; /* raised surfaces: cards, header */
+  --graphite: #1c1b19;
+  --brass: #b08d57;
+  --graphite-60: rgb(28 27 25 / 0.6);
+  --graphite-40: rgb(28 27 25 / 0.4);
+  --graphite-15: rgb(28 27 25 / 0.15);
+  --graphite-08: rgb(28 27 25 / 0.08);
+  --hairline: 1px solid var(--graphite-15);
+
+  --radius-sm: 10px;
+  --radius-md: 18px;
+  --radius-lg: 28px;
+  --radius-pill: 999px;
+  --shadow: 0 1px 2px rgb(28 27 25 / 0.04), 0 12px 32px -12px rgb(28 27 25 / 0.18);
+
+  --gutter: clamp(16px, 2vw, 32px);
+  --margin: clamp(16px, 4vw, 64px);
+  --header-h: 76px;
+
+  --font: 'Inter Tight', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scrollbar-color: var(--graphite-40) transparent; scrollbar-width: thin; }
+
+html, body {
+  margin: 0;
+  background: var(--bone);
+  color: var(--graphite);
+  font-family: var(--font);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, p, dl, dd, ol, ul, figure { margin: 0; padding: 0; }
+a { color: inherit; }
+img { display: block; max-width: 100%; }
+
+::selection { background: var(--brass); color: var(--bone); }
+
+/* ---------- Scrollbar ---------- */
+
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--graphite-40);
+  border: 3px solid var(--bone);
+  border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--graphite-60); }
+
+/* ---------- 3D layer ---------- */
+
+.scene {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.scene--debug { pointer-events: auto; }
+
+/* The watch fades in once its shaders are compiled (see Loader / Warmup). */
+.scene { opacity: 0; transition: opacity 1.2s ease 0.2s; }
+.is-ready .scene { opacity: 1; }
+
+/* No-WebGL fallback: the master photo, head centred like the 3D watch. */
+.scene--poster { display: grid; place-items: center; overflow: hidden; }
+/* The head is ~45 % of the photo's width; size it like the 3D camera fit does. */
+.scene--poster img { width: 53vw; height: auto; max-width: none; }
+@media (max-width: 900px) {
+  .scene--poster img { width: 122vw; transform: translateY(-15vh); }
+}
+
+/* No scrolling into a half-loaded page. */
+.is-loading, .is-loading body { overflow: hidden; }
+
+/* ---------- Loader ---------- */
+
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 20px;
+  background: var(--bone);
+  transition: opacity 0.8s ease, visibility 0.8s;
+}
+
+.loader--done { opacity: 0; visibility: hidden; }
+
+.loader__bar {
+  width: 120px;
+  height: 1px;
+  background: var(--graphite-15);
+  overflow: hidden;
+}
+
+.loader__fill {
+  display: block;
+  height: 100%;
+  background: var(--brass);
+  transform-origin: left;
+  transition: transform 0.4s ease;
+}
+
+/* ---------- Grid & type ---------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  padding: 0 var(--margin);
+}
+
+/* Text lives in the outer columns; the watch owns the centre. */
+.col-left { grid-column: 1 / span 4; }
+.col-right { grid-column: 9 / span 4; }
+
+.display {
+  font-size: clamp(40px, 5.2vw, 88px);
+  font-weight: 500;
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+}
+
+.title {
+  font-size: clamp(28px, 3vw, 44px);
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.lead,
+.body {
+  font-size: clamp(15px, 1.1vw, 18px);
+  line-height: 1.5;
+  color: var(--graphite-60);
+}
+
+.lead { margin-top: 24px; max-width: 34ch; }
+.body { margin-top: 14px; max-width: 40ch; }
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--graphite-60);
+}
+
+.eyebrow__num {
+  padding: 3px 8px;
+  border: var(--hairline);
+  border-radius: var(--radius-pill);
+  color: var(--brass);
+  letter-spacing: 0.04em;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brass);
+  box-shadow: 0 0 0 4px rgb(176 141 87 / 0.18);
+}
+
+/* ---------- Surfaces ---------- */
+
+.card {
+  padding: clamp(22px, 2.2vw, 32px);
+  background: rgb(244 240 233 / 0.82);
+  border: var(--hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+}
+
+.card--compact { padding: 18px 20px; border-radius: var(--radius-md); }
+
+.card--glass {
+  background: rgb(28 27 25 / 0.35);
+  border-color: rgb(237 232 223 / 0.18);
+  color: var(--bone);
+}
+.card--glass .eyebrow { color: rgb(237 232 223 / 0.7); }
+.card--glass .eyebrow__num { border-color: rgb(237 232 223 / 0.25); }
+
+.badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 34px;
+  height: 26px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--brass);
+  border: var(--hairline);
+  border-radius: var(--radius-pill);
+  background: var(--bone);
+}
+
+.badge--on-image {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  color: var(--bone);
+  background: rgb(28 27 25 / 0.45);
+  border-color: rgb(237 232 223 / 0.25);
+  backdrop-filter: blur(6px);
+}
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; list-style: none; }
+
+.chip {
+  padding: 6px 11px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--graphite);
+  background: var(--bone);
+  border: var(--hairline);
+  border-radius: var(--radius-pill);
+}
+
+/* ---------- Buttons ---------- */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 32px;
+  padding: 14px 22px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid var(--graphite);
+  transition: background 0.25s, color 0.25s, transform 0.25s;
+}
+
+.button--pill { border-radius: var(--radius-pill); }
+.button--large { padding: 18px 28px; }
+
+.button:hover { background: var(--graphite); color: var(--bone); }
+
+.button--solid { background: var(--graphite); color: var(--bone); }
+.button--solid:hover { background: var(--brass); border-color: var(--brass); }
+
+.button__arrow { transition: transform 0.25s; }
+.button:hover .button__arrow { transform: translateY(2px); }
+.button--solid:hover .button__arrow { transform: translateX(3px); }
+
+/* ---------- Header ---------- */
+
+.header {
+  position: fixed;
+  inset: 16px var(--margin) auto;
+  z-index: 10;
+}
+
+.header__bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: 56px;
+  padding: 0 8px 0 24px;
+  background: rgb(244 240 233 / 0.78);
+  border: var(--hairline);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  overflow: hidden;
+}
+
+.wordmark {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-decoration: none;
+}
+
+.header__nav {
+  display: flex;
+  gap: 4px;
+  margin: 0 auto;
+}
+
+.header__nav a {
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--graphite-60);
+  border-radius: var(--radius-pill);
+  transition: color 0.2s, background 0.2s;
+}
+
+.header__nav a:hover { color: var(--graphite); }
+.header__nav a[aria-current] { color: var(--graphite); background: var(--graphite-08); }
+
+.header__cta { margin: 0; padding: 12px 18px; font-size: 12px; }
+
+.header__progress {
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  background: var(--brass);
+  transform-origin: left;
+  display: none;
+}
+
+/* ---------- Side progress rail ---------- */
+
+.rail {
+  position: fixed;
+  top: 50%;
+  right: calc(var(--margin) / 2);
+  z-index: 9;
+  height: min(46vh, 380px);
+  transform: translateY(-50%);
+}
+
+.rail__track {
+  position: absolute;
+  inset: 0 auto 0 50%;
+  width: 1px;
+  background: var(--graphite-15);
+}
+
+.rail__fill {
+  position: absolute;
+  inset: 0;
+  background: var(--brass);
+  transform-origin: top;
+}
+
+.rail__ticks {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  list-style: none;
+}
+
+.rail__ticks a {
+  position: relative;
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+
+/* Tick: small ring, filled once passed, larger brass ring when current. */
+.rail__ticks a::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--bone);
+  border: 1px solid var(--graphite-40);
+  transition: inset 0.3s, background 0.3s, border-color 0.3s;
+}
+
+.is-past a::before { background: var(--brass); border-color: var(--brass); }
+.is-active a::before { inset: 1px; border-color: var(--brass); background: var(--bone); box-shadow: inset 0 0 0 3px var(--brass); }
+
+.rail__label {
+  position: absolute;
+  top: 50%;
+  right: 24px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: rgb(244 240 233 / 0.85);
+  border: var(--hairline);
+  border-radius: var(--radius-pill);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transform: translate(6px, -50%);
+  transition: opacity 0.25s, transform 0.25s;
+  pointer-events: none;
+}
+
+.rail__num { color: var(--brass); margin-right: 4px; }
+/* Names appear on hover only — a standing label would sit on top of the right-hand cards. */
+.rail__ticks a:hover .rail__label,
+.rail__ticks a:focus-visible .rail__label { opacity: 1; transform: translate(0, -50%); }
+
+/* ---------- Scroll hint ---------- */
+
+.scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px 10px 14px;
+  background: rgb(244 240 233 / 0.85);
+  border: var(--hairline);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--graphite-60);
+  transform: translateX(-50%);
+  transition: opacity 0.4s;
+}
+
+.scroll-hint.is-hidden { opacity: 0; pointer-events: none; }
+
+.scroll-hint__line {
+  position: relative;
+  width: 1px;
+  height: 22px;
+  background: var(--graphite-15);
+  overflow: hidden;
+}
+
+.scroll-hint__line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--brass);
+  transform: translateY(-100%);
+  animation: scroll-drip 2.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes scroll-drip {
+  0% { transform: translateY(-100%); }
+  55% { transform: translateY(0); }
+  100% { transform: translateY(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-hint__line::after { animation: none; transform: none; }
+}
+
+/* ---------- Footer ---------- */
+
+.footer {
+  position: relative;
+  z-index: 2;
+  padding: 0 var(--margin) 24px;
+  background: var(--bone);
+}
+
+.footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px 28px;
+  font-size: 13px;
+  color: var(--graphite-60);
+  border: var(--hairline);
+  border-radius: var(--radius-lg);
+}
+
+.footer .wordmark { color: var(--graphite); }
+
+/* ---------- Sections ---------- */
+
+main { position: relative; }
+
+.section {
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Content sits above the fixed canvas. */
+.section > .grid { z-index: 2; }
+.section > .grid:not(.sticky) { position: relative; }
+
+.section--tall { height: 160vh; }
+.section--parts { height: 320vh; }
+.section--materials { min-height: 220vh; }
+.section--atmosphere { height: 260vh; }
+
+.sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  align-items: center;
+  padding-top: var(--header-h);
+}
+
+.section--hero .grid {
+  min-height: 100vh;
+  align-items: end;
+  padding-bottom: 16vh;
+}
+
+/* 2 — form: three dimensions under the copy */
+
+.dims {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 24px;
+  border: var(--hairline);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.dims__item { padding: 14px 16px; }
+.dims__item + .dims__item { border-left: var(--hairline); }
+
+.dims dt {
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--graphite-60);
+}
+
+.dims dd {
+  margin-top: 6px;
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.dims small { margin-left: 3px; font-size: 12px; color: var(--graphite-60); }
+
+/* 3 — mechanism: 2×2 figures */
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.stats__item {
+  display: flex;
+  flex-direction: column-reverse;
+  padding: 16px;
+  background: var(--bone);
+  border: var(--hairline);
+  border-radius: var(--radius-md);
+}
+
+.stats dd {
+  font-size: 32px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.stats dt { margin-top: 8px; font-size: 12px; color: var(--graphite-60); }
+
+/* 4 — exploded parts */
+
+.parts {
+  list-style: none;
+  display: grid;
+  gap: 12px;
+  align-self: center;
+}
+
+.parts--left { grid-column: 1 / span 3; }
+.parts--right { grid-column: 10 / span 3; }
+
+.part { display: flex; gap: 14px; align-items: flex-start; }
+
+.part__name {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.part__text {
+  margin-top: 5px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--graphite-60);
+}
+
+/* 5 — materials */
+
+.materials {
+  row-gap: 16vh;
+  padding-top: 20vh;
+  padding-bottom: 20vh;
+}
+
+.material { max-width: 380px; }
+
+.material__media {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: var(--hairline);
+  box-shadow: var(--shadow);
+}
+
+.material img { aspect-ratio: 4 / 5; width: 100%; object-fit: cover; transition: transform 1.2s ease; }
+.material:hover img { transform: scale(1.04); }
+.material figcaption { margin-top: 10px; }
+
+.material--leather { grid-column: 1 / span 3; grid-row: 1; }
+.material--steel { grid-column: 10 / span 3; grid-row: 2; justify-self: end; }
+.material--sapphire { grid-column: 1 / span 3; grid-row: 3; }
+
+/* 6 — atmosphere: loops sit behind the canvas */
+
+.atmosphere__media {
+  position: sticky;
+  top: 0;
+  z-index: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--graphite);
+}
+
+.atmosphere__loop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+
+/* Keep the text readable over the brighter dawn loop. */
+.atmosphere__media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgb(28 27 25 / 0.55), transparent 45%);
+}
+
+.section > .atmosphere__content { margin-top: -100vh; align-items: end; padding-bottom: 14vh; }
+
+/* 7 — specs & order */
+
+.section--order { display: flex; align-items: end; }
+
+.order {
+  width: 100%;
+  padding-top: 52vh;
+  padding-bottom: 6vh;
+  /* The strap of the raised watch slides under the spec sheet. */
+  background: linear-gradient(transparent calc(52vh - 64px), var(--bone) calc(52vh - 8px));
+}
+
+.order__sheet {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 28px;
+  background: var(--bone-2);
+  backdrop-filter: none;
+}
+
+.order__head { display: flex; align-items: end; justify-content: space-between; }
+.order__head .eyebrow { margin-bottom: 0; }
+
+.specs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.spec {
+  padding: 16px 18px;
+  background: var(--bone);
+  border: var(--hairline);
+  border-radius: var(--radius-md);
+}
+
+.spec dt {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--graphite-60);
+}
+
+.spec dd {
+  margin-top: 8px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.order__buy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-top: 24px;
+  border-top: var(--hairline);
+}
+
+.order__buy .button { margin-top: 0; }
+
+.price {
+  font-size: clamp(32px, 3.4vw, 52px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.order__buy .body { margin-top: 8px; }
+
+/* ---------- Debug panel (?debug) ---------- */
+
+.debug {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 30;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  font-size: 12px;
+  background: rgb(237 232 223 / 0.9);
+  border: var(--hairline);
+  border-radius: var(--radius-md);
+}
+
+.debug label { display: grid; grid-template-columns: 64px 160px 40px; align-items: center; gap: 8px; }
+.debug .row { display: flex; flex-wrap: wrap; gap: 6px; }
+.debug button {
+  font: inherit;
+  padding: 4px 8px;
+  background: none;
+  border: 1px solid var(--graphite);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+/* ---------- Medium screens: nav gets tight ---------- */
+
+@media (max-width: 1180px) {
+  .header__nav a { padding: 8px 10px; }
+}
+
+/* ---------- Small screens: single column, text below the watch ---------- */
+
+@media (max-width: 900px) {
+  :root { --header-h: 64px; }
+
+  .col-left,
+  .col-right,
+  .parts--left,
+  .parts--right,
+  .material--leather,
+  .material--steel,
+  .material--sapphire {
+    grid-column: 1 / -1;
+  }
+
+  .header { inset: 10px 10px auto; }
+  .header__bar { height: 50px; padding: 0 6px 0 18px; }
+  .header__nav { display: none; }
+  .header__cta { margin-left: auto; padding: 10px 14px; font-size: 11px; }
+  .header__progress { display: block; }
+
+  .rail { display: none; }
+
+  /* Hero copy sits over the strap on phones, so it gets the card ground too. */
+  .section--hero .grid { padding-bottom: 12vh; }
+  .hero__text {
+    padding: 22px;
+    background: rgb(244 240 233 / 0.86);
+    border: var(--hairline);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .hero__text .button { margin-top: 22px; }
+  .scroll-hint { bottom: 16px; }
+
+  .sticky { align-items: end; padding-bottom: 5vh; }
+
+  .dims dd { font-size: 20px; }
+  .stats dd { font-size: 26px; }
+
+  /* 4: one caption at a time in a single slot at the bottom (sequenced in GSAP). */
+  .parts--left,
+  .parts--right { grid-row: 1; align-self: end; display: grid; }
+  .part { grid-area: 1 / 1; }
+
+  .material { max-width: 78%; }
+  .material--steel { justify-self: end; }
+
+  /* Copy sits at the bottom here, so darken from below rather than from the left. */
+  .atmosphere__media::after {
+    background: linear-gradient(0deg, rgb(28 27 25 / 0.7), transparent 45%);
+  }
+
+  .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .order { padding-top: 45vh; }
+  .order__buy .button { width: 100%; justify-content: center; }
+
+  .footer__inner { flex-direction: column; }
+}
